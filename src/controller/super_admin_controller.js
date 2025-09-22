@@ -1,4 +1,4 @@
-const { prisma } = require("../prisma/prisma.js");
+const { prisma } = require('../prisma/prisma');
 const { sendSuccess, sendError } = require("../utils/response");
 
 // 🔹 Get All Colleges
@@ -352,7 +352,10 @@ async function assignTopicsToCollege(req, res) {
 
 // 🔹 Get Dashboard Data
 async function getDashboardData(req, res) {
+  console.log("🚀 getDashboardData called");
+
   try {
+    console.log("⏳ Fetching dashboard counts and recent records...");
     const [
       totalColleges,
       totalUsers,
@@ -361,32 +364,79 @@ async function getDashboardData(req, res) {
       recentUsers,
       recentColleges,
     ] = await Promise.all([
-      prisma.college.count(),
-      prisma.user.count(),
-      prisma.topic.count(),
-      prisma.assessment.count(),
+     
+      prisma.college.count().then(c => {
+        console.log("✅ totalColleges:", c);
+        return c;
+      }),
+      prisma.user.count().then(c => {
+        console.log("✅ totalUsers:", c);
+        return c;
+      }),
+      prisma.topic.count().then(c => {
+        console.log("✅ totalTopics:", c);
+        return c;
+      }),
+      prisma.assessment.count().then(c => {
+        console.log("✅ totalAssessments:", c);
+        return c;
+      }),
       prisma.user.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
-        include: {
-          college: true,
-          class: true,
-        },
+        include: { college: true, class: true },
+      }).then(users => {
+        console.log("✅ recentUsers fetched:", users.length);
+        return users;
       }),
       prisma.college.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: {
-              users: true,
-              classes: true,
-            },
-          },
-        },
+        include: { _count: { select: { users: true, classes: true } } },
+      }).then(colleges => {
+        console.log("✅ recentColleges fetched:", colleges.length);
+        return colleges;
       }),
     ]);
 
+    console.log("⏳ Mapping recentUsers safely...");
+    const safeRecentUsers = recentUsers.map(user => {
+      const safeCollege = user.college
+        ? { id: user.college.id, name: user.college.name }
+        : null;
+      const safeClass = user.class
+        ? { id: user.class.id, name: user.class.name }
+        : null;
+      console.log(`User ${user.username}: college ->`, safeCollege, ", class ->", safeClass);
+      return {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        isFirstTimeLogin: user.isFirstTimeLogin,
+        lastLogin: user.lastLogin,
+        college: safeCollege,
+        class: safeClass,
+      };
+    });
+
+    console.log("⏳ Mapping recentColleges safely...");
+    const safeRecentColleges = recentColleges.map(college => {
+      console.log(`College ${college.name}: _count ->`, college._count);
+      return {
+        id: college.id,
+        name: college.name,
+        location: college.location,
+        stats: {
+          totalUsers: college._count?.users ?? 0,
+          totalClasses: college._count?.classes ?? 0,
+        },
+      };
+    });
+
+    console.log("✅ Sending success response...");
     return sendSuccess(res, "Dashboard data retrieved successfully", {
       stats: {
         totalColleges,
@@ -394,14 +444,21 @@ async function getDashboardData(req, res) {
         totalTopics,
         totalAssessments,
       },
-      recentUsers,
-      recentColleges,
+      recentUsers: safeRecentUsers,
+      recentColleges: safeRecentColleges,
     });
   } catch (err) {
-    console.error(err);
-    return sendError(res, "Failed to retrieve dashboard data", 500);
+    console.error("🔥 Unexpected error in getDashboardData:", err);
+    return sendError(res, err.message || "Failed to retrieve dashboard data", 500);
   }
+
 }
+
+
+
+
+
+
 
 module.exports = {
   getAllColleges,

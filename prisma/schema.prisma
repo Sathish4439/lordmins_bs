@@ -1,4 +1,3 @@
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
@@ -45,187 +44,187 @@ enum UserStatus {
 }
 
 model User {
-  id                Int         @id @default(autoincrement())
-  name              String
-  username          String      @unique
-  email             String?     @unique
-  passwordHash      String
-  role              Role
-  status            UserStatus  @default(PENDING_CONFIRMATION)
-  collegeId         Int?
-  classId           Int?
-  rollNo            String?
-  dob               DateTime?
-  lastLogin         DateTime?
-  isFirstTimeLogin  Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id               Int        @id @default(autoincrement())
+  name             String
+  username         String     @unique
+  email            String?    @unique
+  passwordHash     String
+  role             Role
+  status           UserStatus @default(PENDING_CONFIRMATION)
+  collegeId        Int?
+  classId          Int?
+  rollNo           String?
+  dob              DateTime?
+  lastLogin        DateTime?
+  isFirstTimeLogin Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   // Relations
-  college           College?    @relation(fields: [collegeId], references: [id])
-  class             Class?      @relation(fields: [classId], references: [id])
-  assessmentResults AssessmentResult[]
-  studentProgress   StudentTopicProgress[]
-  refreshTokens     RefreshToken[]
-  createdTopics     Topic[]     @relation("CreatedTopics")
-  createdAssessments Assessment[] @relation("CreatedAssessments")
-  initialAssessment InitialAssessment?
+  college              College?               @relation(fields: [collegeId], references: [id])
+  class                Class?                 @relation(fields: [classId], references: [id])
+  assessmentResults    AssessmentResult[]
+  studentProgress      StudentTopicProgress[]
+  refreshTokens        RefreshToken[]
+  createdTopics        Topic[]                @relation("CreatedTopics")
+  createdAssessments   Assessment[]           @relation("CreatedAssessments")
+  initialAssessment    InitialAssessment?
   administrativeAccess AdministrativeAccess?
-  superAdmin        SuperAdmin?
-  admin             Admin?
-  teacher           Teacher?
-  student           Student?
+  superAdmin           SuperAdmin?
+  admin                Admin?
+  teacher              Teacher?
+  student              Student?
 }
 
 model College {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
   location  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  classes   Class[]
-  users     User[]
-  topics    CollegeTopic[]
+  classes              Class[]
+  users                User[]
+  topics               CollegeTopic[]
   administrativeAccess AdministrativeAccess?
-  teachers  Teacher[]
-  students  Student[]
-  assessments Assessment[]
+  teachers             Teacher[]
+  students             Student[]
+  assessments          Assessment[]
 }
 
 model Class {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
   collegeId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  college   College @relation(fields: [collegeId], references: [id])
-  users     User[]
-  students  Student[]
+  college     College      @relation(fields: [collegeId], references: [id])
+  users       User[]
+  students    Student[]
   assessments Assessment[]
 }
 
 // Role-specific models
 model SuperAdmin {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @unique
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
   createdAt DateTime @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Admin {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @unique
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
   createdAt DateTime @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model AdministrativeAccess {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @unique
-  collegeId Int     @unique
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  collegeId Int      @unique
   createdAt DateTime @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
-  college   College @relation(fields: [collegeId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  college College @relation(fields: [collegeId], references: [id])
 }
 
 model Teacher {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @unique
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
   collegeId Int
   createdAt DateTime @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
-  college   College @relation(fields: [collegeId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  college College @relation(fields: [collegeId], references: [id])
 }
 
 model Student {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @unique
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
   collegeId Int
   classId   Int
   rollNo    String
   createdAt DateTime @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
-  college   College @relation(fields: [collegeId], references: [id])
-  class     Class   @relation(fields: [classId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  college College @relation(fields: [collegeId], references: [id])
+  class   Class   @relation(fields: [classId], references: [id])
 }
 
 model Topic {
-  id          Int        @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   description String?
-  order       Int        @default(0)
-  isActive    Boolean    @default(true)
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
   createdById Int?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  createdBy   User?      @relation("CreatedTopics", fields: [createdById], references: [id])
-  subTopics   SubTopic[]
+  createdBy     User?          @relation("CreatedTopics", fields: [createdById], references: [id])
+  subTopics     SubTopic[]
   collegeTopics CollegeTopic[]
 }
 
 // College-specific topic assignments
 model CollegeTopic {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   collegeId Int
   topicId   Int
-  isActive  Boolean @default(true)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  college   College @relation(fields: [collegeId], references: [id])
-  topic     Topic   @relation(fields: [topicId], references: [id])
+  college College @relation(fields: [collegeId], references: [id])
+  topic   Topic   @relation(fields: [topicId], references: [id])
 
   @@unique([collegeId, topicId])
 }
 
 model SubTopic {
-  id            Int      @id @default(autoincrement())
-  topicId       Int
-  title         String
-  contentText   String?
-  videoFileId   Int?
-  imageFileIds  String?  // JSON encoded array of file ids or urls
-  order         Int      @default(0)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  topicId      Int
+  title        String
+  contentText  String?
+  videoFileId  Int?
+  imageFileIds String? // JSON encoded array of file ids or urls
+  order        Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  topic         Topic     @relation(fields: [topicId], references: [id])
-  assessment    Assessment?
-  progress      StudentTopicProgress[]
-  videoFile     File?     @relation("SubTopicVideo", fields: [videoFileId], references: [id])
+  topic      Topic                  @relation(fields: [topicId], references: [id])
+  assessment Assessment?
+  progress   StudentTopicProgress[]
+  videoFile  File?                  @relation("SubTopicVideo", fields: [videoFileId], references: [id])
 }
 
 model Assessment {
-  id            Int            @id @default(autoincrement())
-  subTopicId    Int?           @unique
-  title         String
-  description   String?
-  type          AssessmentType
-  pdfFileId     Int?
-  isActive      Boolean        @default(true)
-  passingScore  Float          @default(60.0)
-  timeLimit     Int?           // in minutes
-  createdById   Int?
-  collegeId     Int?
-  classId       Int?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           Int            @id @default(autoincrement())
+  subTopicId   Int?           @unique
+  title        String
+  description  String?
+  type         AssessmentType
+  pdfFileId    Int?
+  isActive     Boolean        @default(true)
+  passingScore Float          @default(60.0)
+  timeLimit    Int? // in minutes
+  createdById  Int?
+  collegeId    Int?
+  classId      Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
-  subTopic      SubTopic?      @relation(fields: [subTopicId], references: [id])
-  questions     Question[]
-  createdBy     User?          @relation("CreatedAssessments", fields: [createdById], references: [id])
-  results       AssessmentResult[]
-  pdfFile       File?          @relation("AssessmentPDF", fields: [pdfFileId], references: [id])
-  college       College?       @relation(fields: [collegeId], references: [id])
-  class         Class?         @relation(fields: [classId], references: [id])
+  subTopic  SubTopic?          @relation(fields: [subTopicId], references: [id])
+  questions Question[]
+  createdBy User?              @relation("CreatedAssessments", fields: [createdById], references: [id])
+  results   AssessmentResult[]
+  pdfFile   File?              @relation("AssessmentPDF", fields: [pdfFileId], references: [id])
+  college   College?           @relation(fields: [collegeId], references: [id])
+  class     Class?             @relation(fields: [classId], references: [id])
 }
 
 model Question {
@@ -234,17 +233,17 @@ model Question {
   topic              String
   subTopic           String
   questionText       String
-  options            String   // JSON encoded array
+  options            String // JSON encoded array
   correctAnswerIndex Int
   explanation        String?
-  timeLimitSec       Int?     // optional per-question time limit
-  isVoiceRecognition Boolean @default(false)
+  timeLimitSec       Int? // optional per-question time limit
+  isVoiceRecognition Boolean  @default(false)
   audioFileId        Int?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  assessment         Assessment @relation(fields: [assessmentId], references: [id])
-  audioFile          File?      @relation("QuestionAudio", fields: [audioFileId], references: [id])
+  assessment Assessment @relation(fields: [assessmentId], references: [id])
+  audioFile  File?      @relation("QuestionAudio", fields: [audioFileId], references: [id])
 }
 
 model AssessmentResult {
@@ -255,42 +254,42 @@ model AssessmentResult {
   total         Int
   timeSpentSec  Int
   passed        Boolean
-  details       String?  // JSON string for per-question details
+  details       String? // JSON string for per-question details
   attemptNumber Int      @default(1)
   createdAt     DateTime @default(now())
 
-  assessment    Assessment @relation(fields: [assessmentId], references: [id])
-  student       User       @relation(fields: [studentId], references: [id])
+  assessment Assessment @relation(fields: [assessmentId], references: [id])
+  student    User       @relation(fields: [studentId], references: [id])
 }
 
 model StudentTopicProgress {
-  id            Int           @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   studentId     Int
   subTopicId    Int
   status        ProgressStatus @default(LOCKED)
-  score         Float? 
-  attempts      Int           @default(0)
+  score         Float?
+  attempts      Int            @default(0)
   lastAttemptAt DateTime?
-  timeSpent     Int           @default(0) // in seconds
+  timeSpent     Int            @default(0) // in seconds
   unlockedAt    DateTime?
 
-  student       User     @relation(fields: [studentId], references: [id])
-  subTopic      SubTopic @relation(fields: [subTopicId], references: [id])
+  student  User     @relation(fields: [studentId], references: [id])
+  subTopic SubTopic @relation(fields: [subTopicId], references: [id])
 
   @@unique([studentId, subTopicId])
 }
 
 // Initial Assessment for topic selection
 model InitialAssessment {
-  id            Int      @id @default(autoincrement())
-  studentId     Int      @unique
-  score         Float
-  total         Int
-  timeSpentSec  Int
-  details       String?  // JSON string for per-question details
-  completedAt   DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  studentId    Int      @unique
+  score        Float
+  total        Int
+  timeSpentSec Int
+  details      String? // JSON string for per-question details
+  completedAt  DateTime @default(now())
 
-  student       User     @relation(fields: [studentId], references: [id])
+  student User @relation(fields: [studentId], references: [id])
 }
 
 model File {
@@ -300,21 +299,21 @@ model File {
   storage   String   @default("LOCAL") // LOCAL or S3
   type      FileType
   size      Int?
-  meta      String?  // JSON
+  meta      String? // JSON
   createdAt DateTime @default(now())
 
   // Relations
-  subTopicVideo     SubTopic[]     @relation("SubTopicVideo")
-  assessmentPDF     Assessment[]   @relation("AssessmentPDF")
-  questionAudio     Question[]     @relation("QuestionAudio")
+  subTopicVideo SubTopic[]   @relation("SubTopicVideo")
+  assessmentPDF Assessment[] @relation("AssessmentPDF")
+  questionAudio Question[]   @relation("QuestionAudio")
 }
 
 model RefreshToken {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  tokenHash  String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
-  user       User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }

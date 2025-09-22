@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const prisma = require("../prisma/prisma.js");
+const { prisma } = require('../prisma/prisma');// Import actual Prisma client
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -18,7 +18,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    // ✅ fetch user with relations that actually exist
+    // Fetch user with relations
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       include: {
@@ -41,8 +41,10 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "User not found" });
     }
 
+    // Attach user to request
     req.user = user;
-    req.role = user.role; // role is an enum in your schema
+    req.role = user.role;
+
     next();
   } catch (error) {
     console.error("AuthMiddleware Error:", error.message);

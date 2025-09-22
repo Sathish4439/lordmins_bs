@@ -18,7 +18,7 @@ route.use("/auth", authRoute);
 // Protected routes
 route.use("/profile", profileRoute);
 route.use("/colleges", collegeRouter);
-route.use("/super-admin", superAdminRoute);
+route.use("/super-admin",superAdminRoute);
 route.use("/admin", adminRoute);
 route.use("/teacher", teacherRoute);
 route.use("/student", studentRoute);

@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const { prisma } = require("../prisma/prisma.js");
+const prisma = require("../prisma/prisma.js");
 const { sendSuccess, sendError } = require("../utils/response");
 
 dotenv.config();
@@ -94,8 +94,11 @@ async function signup(req, res) {
 async function login(req, res) {
   const { username, password } = req.body;
 
+  console.log(req.body);
+  
+
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma. prisma.user.findUnique({
       where: { username },
       include: {
         college: true,
@@ -114,7 +117,7 @@ async function login(req, res) {
     if (!valid) return sendError(res, "Invalid password", 400);
 
     // Update last login
-    await prisma.user.update({
+    await prisma. prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
@@ -157,7 +160,7 @@ async function confirmFirstTimeLogin(req, res) {
   const { userId } = req.user;
 
   try {
-    const user = await prisma.user.update({
+    const user = await prisma. prisma.user.update({
       where: { id: userId },
       data: { 
         isFirstTimeLogin: false,
