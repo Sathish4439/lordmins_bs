@@ -652,6 +652,322 @@ async function getOverallReport(collegeId, classId, startDate, endDate) {
   };
 }
 
+// 🔹 Get All Departments
+async function getAllDepartments(req, res) {
+  try {
+    const departments = await prisma.department.findMany({
+      include: {
+        college: true,
+        classes: true,
+        users: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            role: true,
+            status: true,
+            lastLogin: true,
+          },
+        },
+        _count: {
+          select: {
+            users: true,
+            classes: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return sendSuccess(res, "Departments retrieved successfully", departments);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve departments", 500);
+  }
+}
+
+// 🔹 Get All Timesheets
+async function getAllTimesheets(req, res) {
+  try {
+    const { collegeId, classId, startDate, endDate } = req.query;
+    
+    let whereClause = {};
+    
+    if (collegeId) {
+      whereClause.user = {
+        collegeId: parseInt(collegeId),
+      };
+    }
+    
+    if (classId) {
+      whereClause.user = {
+        ...whereClause.user,
+        classId: parseInt(classId),
+      };
+    }
+    
+    if (startDate && endDate) {
+      whereClause.date = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    const timesheets = await prisma.timesheet.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            role: true,
+            college: true,
+            class: true,
+          },
+        },
+      },
+      orderBy: { date: "desc" },
+    });
+
+    return sendSuccess(res, "Timesheets retrieved successfully", timesheets);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve timesheets", 500);
+  }
+}
+
+// 🔹 Get All Classes
+async function getAllClasses(req, res) {
+  try {
+    const { collegeId } = req.query;
+    
+    let whereClause = {};
+    if (collegeId) {
+      whereClause.collegeId = parseInt(collegeId);
+    }
+
+    const classes = await prisma.class.findMany({
+      where: whereClause,
+      include: {
+        college: true,
+        department: true,
+        users: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            role: true,
+            status: true,
+            lastLogin: true,
+          },
+        },
+        _count: {
+          select: {
+            users: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return sendSuccess(res, "Classes retrieved successfully", classes);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve classes", 500);
+  }
+}
+
+// 🔹 Create College
+async function createCollege(req, res) {
+  try {
+    const { name, location } = req.body;
+
+    if (!name) {
+      return sendError(res, "College name is required", 400);
+    }
+
+    const college = await prisma.college.create({
+      data: {
+        name,
+        location: location || null,
+      },
+      include: {
+        classes: true,
+        users: true,
+        _count: {
+          select: {
+            users: true,
+            classes: true,
+          },
+        },
+      },
+    });
+
+    return sendSuccess(res, "College created successfully", college, 201);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create college", 500);
+  }
+}
+
+// 🔹 Create Class
+async function createClass(req, res) {
+  try {
+    const { name, collegeId, departmentId } = req.body;
+
+    if (!name || !collegeId) {
+      return sendError(res, "Class name and college ID are required", 400);
+    }
+
+    const classModel = await prisma.class.create({
+      data: {
+        name,
+        collegeId: parseInt(collegeId),
+        departmentId: departmentId ? parseInt(departmentId) : null,
+      },
+      include: {
+        college: true,
+        department: true,
+        users: true,
+        _count: {
+          select: {
+            users: true,
+          },
+        },
+      },
+    });
+
+    return sendSuccess(res, "Class created successfully", classModel, 201);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create class", 500);
+  }
+}
+
+// 🔹 Create Student
+async function createStudent(req, res) {
+  try {
+    const { name, username, password, collegeId, classId, departmentId, rollNo, dob } = req.body;
+
+    if (!name || !username || !password || !collegeId || !classId || !rollNo) {
+      return sendError(res, "Name, username, password, college ID, class ID, and roll number are required", 400);
+    }
+
+    // Check if username already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (existingUser) {
+      return sendError(res, "Username already exists", 400);
+    }
+
+    const bcrypt = require("bcrypt");
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const student = await prisma.user.create({
+      data: {
+        name,
+        username,
+        passwordHash,
+        role: "STUDENT",
+        status: "ACTIVE",
+        collegeId: parseInt(collegeId),
+        classId: parseInt(classId),
+        departmentId: departmentId ? parseInt(departmentId) : null,
+        rollNo,
+        dob: dob ? new Date(dob) : null,
+        isFirstTimeLogin: true,
+      },
+      include: {
+        college: true,
+        class: true,
+        department: true,
+      },
+    });
+
+    return sendSuccess(res, "Student created successfully", student, 201);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create student", 500);
+  }
+}
+
+// 🔹 Create Teacher
+async function createTeacher(req, res) {
+  try {
+    const { name, username, password, collegeId, departmentId } = req.body;
+
+    if (!name || !username || !password || !collegeId) {
+      return sendError(res, "Name, username, password, and college ID are required", 400);
+    }
+
+    // Check if username already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (existingUser) {
+      return sendError(res, "Username already exists", 400);
+    }
+
+    const bcrypt = require("bcrypt");
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const teacher = await prisma.user.create({
+      data: {
+        name,
+        username,
+        passwordHash,
+        role: "TEACHER",
+        status: "ACTIVE",
+        collegeId: parseInt(collegeId),
+        departmentId: departmentId ? parseInt(departmentId) : null,
+        isFirstTimeLogin: true,
+      },
+      include: {
+        college: true,
+        department: true,
+      },
+    });
+
+    return sendSuccess(res, "Teacher created successfully", teacher, 201);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create teacher", 500);
+  }
+}
+
+// 🔹 Assign Topics to College
+async function assignTopicsToCollege(req, res) {
+  try {
+    const { collegeId, topicIds } = req.body;
+
+    if (!collegeId || !topicIds || !Array.isArray(topicIds)) {
+      return sendError(res, "College ID and topic IDs array are required", 400);
+    }
+
+    // Remove existing assignments for this college
+    await prisma.collegeTopic.deleteMany({
+      where: { collegeId: parseInt(collegeId) },
+    });
+
+    // Create new assignments
+    const assignments = await prisma.collegeTopic.createMany({
+      data: topicIds.map(topicId => ({
+        collegeId: parseInt(collegeId),
+        topicId: parseInt(topicId),
+      })),
+    });
+
+    return sendSuccess(res, "Topics assigned to college successfully", { assignments });
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to assign topics to college", 500);
+  }
+}
+
 module.exports = {
   getAllColleges,
   getCollegeDetails,
@@ -663,4 +979,12 @@ module.exports = {
   getStudentProgress,
   getDashboardData,
   generateReport,
+  getAllDepartments,
+  getAllTimesheets,
+  getAllClasses,
+  createCollege,
+  createClass,
+  createStudent,
+  createTeacher,
+  assignTopicsToCollege,
 };

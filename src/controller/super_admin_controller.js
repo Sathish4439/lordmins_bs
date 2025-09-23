@@ -1,4 +1,4 @@
-const { prisma } = require('../prisma/prisma');
+const { prisma } = require("../prisma/prisma");
 const { sendSuccess, sendError } = require("../utils/response");
 
 // 🔹 Get All Colleges
@@ -312,6 +312,512 @@ async function createTopic(req, res) {
   }
 }
 
+// 🔹 Update Topic
+async function updateTopic(req, res) {
+  const { id } = req.params;
+  const { title, description, order } = req.body;
+
+  try {
+    const topic = await prisma.topic.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        order: order || 0,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        subTopics: true,
+        collegeTopics: true,
+      },
+    });
+
+    return sendSuccess(res, "Topic updated successfully", topic);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to update topic", 500);
+  }
+}
+
+// 🔹 Delete Topic
+async function deleteTopic(req, res) {
+  const { id } = req.params;
+
+  try {
+    await prisma.topic.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return sendSuccess(res, "Topic deleted successfully");
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to delete topic", 500);
+  }
+}
+
+// 🔹 Get All Sub-Topics
+async function getAllSubTopics(req, res) {
+  try {
+    const subTopics = await prisma.subTopic.findMany({
+      include: {
+        topic: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        assessment: true,
+        videoFile: true,
+        progress: {
+          include: {
+            student: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { order: "asc" },
+    });
+
+    return sendSuccess(res, "Sub-topics retrieved successfully", subTopics);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve sub-topics", 500);
+  }
+}
+
+// 🔹 Create Sub-Topic
+async function createSubTopic(req, res) {
+  const { title, description, topicId, videoFileId, imageFileIds, order } =
+    req.body;
+
+  try {
+    const subTopic = await prisma.subTopic.create({
+      data: {
+        title,
+        description,
+        topicId: parseInt(topicId),
+        videoFileId: videoFileId ? parseInt(videoFileId) : null,
+        imageFileIds: imageFileIds ? JSON.stringify(imageFileIds) : null,
+        order: order || 0,
+      },
+      include: {
+        topic: true,
+        assessment: true,
+        videoFile: true,
+      },
+    });
+
+    return sendSuccess(res, "Sub-topic created successfully", subTopic);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create sub-topic", 500);
+  }
+}
+
+// 🔹 Update Sub-Topic
+async function updateSubTopic(req, res) {
+  const { id } = req.params;
+  const { title, description, videoFileId, imageFileIds, order } = req.body;
+
+  try {
+    const subTopic = await prisma.subTopic.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        videoFileId: videoFileId ? parseInt(videoFileId) : null,
+        imageFileIds: imageFileIds ? JSON.stringify(imageFileIds) : null,
+        order: order || 0,
+      },
+      include: {
+        topic: true,
+        assessment: true,
+        videoFile: true,
+      },
+    });
+
+    return sendSuccess(res, "Sub-topic updated successfully", subTopic);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to update sub-topic", 500);
+  }
+}
+
+// 🔹 Delete Sub-Topic
+async function deleteSubTopic(req, res) {
+  const { id } = req.params;
+
+  try {
+    await prisma.subTopic.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return sendSuccess(res, "Sub-topic deleted successfully");
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to delete sub-topic", 500);
+  }
+}
+
+// 🔹 Get All Assessments
+async function getAllAssessments(req, res) {
+  try {
+    const assessments = await prisma.assessment.findMany({
+      include: {
+        subTopic: {
+          include: {
+            topic: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+        questions: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        college: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        class: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        results: {
+          include: {
+            student: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return sendSuccess(res, "Assessments retrieved successfully", assessments);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve assessments", 500);
+  }
+}
+
+// 🔹 Create Assessment
+async function createAssessment(req, res) {
+  const {
+    title,
+    description,
+    type,
+    subTopicId,
+    collegeId,
+    classId,
+    passingScore,
+    timeLimit,
+    pdfFileId,
+  } = req.body;
+  const { userId } = req.user;
+
+  try {
+    const assessment = await prisma.assessment.create({
+      data: {
+        title,
+        description,
+        type,
+        subTopicId: subTopicId ? parseInt(subTopicId) : null,
+        collegeId: collegeId ? parseInt(collegeId) : null,
+        classId: classId ? parseInt(classId) : null,
+        passingScore: passingScore || 60.0,
+        timeLimit: timeLimit ? parseInt(timeLimit) : null,
+        pdfFileId: pdfFileId ? parseInt(pdfFileId) : null,
+        createdById: userId,
+      },
+      include: {
+        subTopic: {
+          include: {
+            topic: true,
+          },
+        },
+        questions: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        college: true,
+        class: true,
+      },
+    });
+
+    return sendSuccess(res, "Assessment created successfully", assessment);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create assessment", 500);
+  }
+}
+
+// 🔹 Update Assessment
+async function updateAssessment(req, res) {
+  const { id } = req.params;
+  const { title, description, type, passingScore, timeLimit, pdfFileId } =
+    req.body;
+
+  try {
+    const assessment = await prisma.assessment.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        description,
+        type,
+        passingScore: passingScore || 60.0,
+        timeLimit: timeLimit ? parseInt(timeLimit) : null,
+        pdfFileId: pdfFileId ? parseInt(pdfFileId) : null,
+      },
+      include: {
+        subTopic: {
+          include: {
+            topic: true,
+          },
+        },
+        questions: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        college: true,
+        class: true,
+      },
+    });
+
+    return sendSuccess(res, "Assessment updated successfully", assessment);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to update assessment", 500);
+  }
+}
+
+// 🔹 Delete Assessment
+async function deleteAssessment(req, res) {
+  const { id } = req.params;
+
+  try {
+    await prisma.assessment.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return sendSuccess(res, "Assessment deleted successfully");
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to delete assessment", 500);
+  }
+}
+
+// 🔹 Get All Classes
+async function getAllClasses(req, res) {
+  try {
+    const classes = await prisma.class.findMany({
+      include: {
+        college: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+          },
+        },
+        students: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            rollNo: true,
+          },
+        },
+        _count: {
+          select: {
+            students: true,
+            users: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return sendSuccess(res, "Classes retrieved successfully", classes);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve classes", 500);
+  }
+}
+
+// 🔹 Create Class
+async function createClass(req, res) {
+  const { name, collegeId } = req.body;
+
+  try {
+    const classModel = await prisma.class.create({
+      data: {
+        name,
+        collegeId: parseInt(collegeId),
+      },
+      include: {
+        college: true,
+        _count: {
+          select: {
+            students: true,
+            users: true,
+          },
+        },
+      },
+    });
+
+    return sendSuccess(res, "Class created successfully", classModel);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to create class", 500);
+  }
+}
+
+// 🔹 Update Class
+async function updateClass(req, res) {
+  const { id } = req.params;
+  const { name, collegeId } = req.body;
+
+  try {
+    const classModel = await prisma.class.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        collegeId: collegeId ? parseInt(collegeId) : undefined,
+      },
+      include: {
+        college: true,
+        _count: {
+          select: {
+            students: true,
+            users: true,
+          },
+        },
+      },
+    });
+
+    return sendSuccess(res, "Class updated successfully", classModel);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to update class", 500);
+  }
+}
+
+// 🔹 Delete Class
+async function deleteClass(req, res) {
+  const { id } = req.params;
+
+  try {
+    await prisma.class.delete({
+      where: { id: parseInt(id) },
+    });
+
+    return sendSuccess(res, "Class deleted successfully");
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to delete class", 500);
+  }
+}
+
+// 🔹 Get All Reports
+async function getAllReports(req, res) {
+  try {
+    const reports = await prisma.report.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        college: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        class: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+      },
+      orderBy: { generatedAt: "desc" },
+    });
+
+    return sendSuccess(res, "Reports retrieved successfully", reports);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve reports", 500);
+  }
+}
+
+// 🔹 Download Report
+async function downloadReport(req, res) {
+  const { reportId } = req.params;
+
+  try {
+    const report = await prisma.report.findFirst({
+      where: { id: parseInt(reportId) },
+    });
+
+    if (!report) {
+      return sendError(res, "Report not found", 404);
+    }
+
+    if (!report.filePath || !require("fs").existsSync(report.filePath)) {
+      return sendError(res, "Report file not found", 404);
+    }
+
+    res.download(report.filePath, require("path").basename(report.filePath));
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to download report", 500);
+  }
+}
+
 // 🔹 Assign Topics to College
 async function assignTopicsToCollege(req, res) {
   const { collegeId, topicIds } = req.body;
@@ -364,50 +870,58 @@ async function getDashboardData(req, res) {
       recentUsers,
       recentColleges,
     ] = await Promise.all([
-     
-      prisma.college.count().then(c => {
+      prisma.college.count().then((c) => {
         console.log("✅ totalColleges:", c);
         return c;
       }),
-      prisma.user.count().then(c => {
+      prisma.user.count().then((c) => {
         console.log("✅ totalUsers:", c);
         return c;
       }),
-      prisma.topic.count().then(c => {
+      prisma.topic.count().then((c) => {
         console.log("✅ totalTopics:", c);
         return c;
       }),
-      prisma.assessment.count().then(c => {
+      prisma.assessment.count().then((c) => {
         console.log("✅ totalAssessments:", c);
         return c;
       }),
-      prisma.user.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: { college: true, class: true },
-      }).then(users => {
-        console.log("✅ recentUsers fetched:", users.length);
-        return users;
-      }),
-      prisma.college.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: { _count: { select: { users: true, classes: true } } },
-      }).then(colleges => {
-        console.log("✅ recentColleges fetched:", colleges.length);
-        return colleges;
-      }),
+      prisma.user
+        .findMany({
+          take: 5,
+          orderBy: { createdAt: "desc" },
+          include: { college: true, class: true },
+        })
+        .then((users) => {
+          console.log("✅ recentUsers fetched:", users.length);
+          return users;
+        }),
+      prisma.college
+        .findMany({
+          take: 5,
+          orderBy: { createdAt: "desc" },
+          include: { _count: { select: { users: true, classes: true } } },
+        })
+        .then((colleges) => {
+          console.log("✅ recentColleges fetched:", colleges.length);
+          return colleges;
+        }),
     ]);
 
     console.log("⏳ Mapping recentUsers safely...");
-    const safeRecentUsers = recentUsers.map(user => {
+    const safeRecentUsers = recentUsers.map((user) => {
       const safeCollege = user.college
         ? { id: user.college.id, name: user.college.name }
         : null;
       const safeClass = user.class
         ? { id: user.class.id, name: user.class.name }
         : null;
-      console.log(`User ${user.username}: college ->`, safeCollege, ", class ->", safeClass);
+      console.log(
+        `User ${user.username}: college ->`,
+        safeCollege,
+        ", class ->",
+        safeClass
+      );
       return {
         id: user.id,
         name: user.name,
@@ -423,7 +937,7 @@ async function getDashboardData(req, res) {
     });
 
     console.log("⏳ Mapping recentColleges safely...");
-    const safeRecentColleges = recentColleges.map(college => {
+    const safeRecentColleges = recentColleges.map((college) => {
       console.log(`College ${college.name}: _count ->`, college._count);
       return {
         id: college.id,
@@ -449,16 +963,144 @@ async function getDashboardData(req, res) {
     });
   } catch (err) {
     console.error("🔥 Unexpected error in getDashboardData:", err);
-    return sendError(res, err.message || "Failed to retrieve dashboard data", 500);
+    return sendError(
+      res,
+      err.message || "Failed to retrieve dashboard data",
+      500
+    );
   }
-
 }
 
+// Department Management Functions
+const getAllDepartments = async (req, res) => {
+  try {
+    const departments = await prisma.department.findMany({
+      include: {
+        college: true,
+        classes: true,
+        users: true,
+        teachers: true,
+        students: true,
+      },
+    });
 
+    res.json({
+      success: true,
+      data: departments,
+    });
+  } catch (error) {
+    console.error("Error fetching departments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch departments",
+      error: error.message,
+    });
+  }
+};
 
+const createDepartment = async (req, res) => {
+  try {
+    const { name, collegeId } = req.body;
 
+    if (!name || !collegeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and collegeId are required",
+      });
+    }
 
+    const department = await prisma.department.create({
+      data: {
+        name,
+        collegeId: parseInt(collegeId),
+      },
+      include: {
+        college: true,
+        classes: true,
+        users: true,
+        teachers: true,
+        students: true,
+      },
+    });
 
+    res.status(201).json({
+      success: true,
+      data: department,
+      message: "Department created successfully",
+    });
+  } catch (error) {
+    console.error("Error creating department:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create department",
+      error: error.message,
+    });
+  }
+};
+
+const updateDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, collegeId } = req.body;
+
+    if (!name || !collegeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and collegeId are required",
+      });
+    }
+
+    const department = await prisma.department.update({
+      where: { id: parseInt(id) },
+      data: {
+        name,
+        collegeId: parseInt(collegeId),
+      },
+      include: {
+        college: true,
+        classes: true,
+        users: true,
+        teachers: true,
+        students: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: department,
+      message: "Department updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating department:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update department",
+      error: error.message,
+    });
+  }
+};
+
+const deleteDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.department.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.json({
+      success: true,
+      message: "Department deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting department:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete department",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   getAllColleges,
@@ -471,6 +1113,26 @@ module.exports = {
   deleteUser,
   getAllTopics,
   createTopic,
+  updateTopic,
+  deleteTopic,
   assignTopicsToCollege,
+  getAllSubTopics,
+  createSubTopic,
+  updateSubTopic,
+  deleteSubTopic,
+  getAllAssessments,
+  createAssessment,
+  updateAssessment,
+  deleteAssessment,
+  getAllClasses,
+  createClass,
+  updateClass,
+  deleteClass,
+  getAllReports,
+  downloadReport,
   getDashboardData,
+  getAllDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
 };

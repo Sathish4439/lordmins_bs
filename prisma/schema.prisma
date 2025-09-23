@@ -52,6 +52,7 @@ model User {
   role             Role
   status           UserStatus @default(PENDING_CONFIRMATION)
   collegeId        Int?
+  departmentId     Int?
   classId          Int?
   rollNo           String?
   dob              DateTime?
@@ -62,6 +63,7 @@ model User {
 
   // Relations
   college              College?               @relation(fields: [collegeId], references: [id])
+  department           Department?            @relation(fields: [departmentId], references: [id])
   class                Class?                 @relation(fields: [classId], references: [id])
   assessmentResults    AssessmentResult[]
   studentProgress      StudentTopicProgress[]
@@ -74,6 +76,9 @@ model User {
   admin                Admin?
   teacher              Teacher?
   student              Student?
+  timesheets           Timesheet[]
+  reports              Report[]
+  studentReports       Report[]               @relation("ReportStudent")
 }
 
 model College {
@@ -83,6 +88,7 @@ model College {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  departments          Department[]
   classes              Class[]
   users                User[]
   topics               CollegeTopic[]
@@ -90,19 +96,39 @@ model College {
   teachers             Teacher[]
   students             Student[]
   assessments          Assessment[]
+  reports              Report[]
+  unlockRules          TopicUnlockRule[]
+  collegeCourses       CollegeCourse[]
 }
 
-model Class {
+model Department {
   id        Int      @id @default(autoincrement())
   name      String
   collegeId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  college  College   @relation(fields: [collegeId], references: [id])
+  classes  Class[]
+  users    User[]
+  teachers Teacher[]
+  students Student[]
+}
+
+model Class {
+  id           Int      @id @default(autoincrement())
+  name         String
+  collegeId    Int
+  departmentId Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   college     College      @relation(fields: [collegeId], references: [id])
+  department  Department?  @relation(fields: [departmentId], references: [id])
   users       User[]
   students    Student[]
   assessments Assessment[]
+  Report      Report[]
 }
 
 // Role-specific models
@@ -133,26 +159,30 @@ model AdministrativeAccess {
 }
 
 model Teacher {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  collegeId Int
-  createdAt DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  collegeId    Int
+  departmentId Int?
+  createdAt    DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id])
-  college College @relation(fields: [collegeId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  college    College     @relation(fields: [collegeId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
 }
 
 model Student {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  collegeId Int
-  classId   Int
-  rollNo    String
-  createdAt DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  collegeId    Int
+  departmentId Int?
+  classId      Int
+  rollNo       String
+  createdAt    DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id])
-  college College @relation(fields: [collegeId], references: [id])
-  class   Class   @relation(fields: [classId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  college    College     @relation(fields: [collegeId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  class      Class       @relation(fields: [classId], references: [id])
 }
 
 model Topic {
@@ -165,9 +195,10 @@ model Topic {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  createdBy     User?          @relation("CreatedTopics", fields: [createdById], references: [id])
+  createdBy     User?             @relation("CreatedTopics", fields: [createdById], references: [id])
   subTopics     SubTopic[]
   collegeTopics CollegeTopic[]
+  unlockRules   TopicUnlockRule[]
 }
 
 // College-specific topic assignments
@@ -316,4 +347,80 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+// Timesheet tracking for all users
+model Timesheet {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  date       DateTime  @default(now())
+  loginTime  DateTime?
+  logoutTime DateTime?
+  duration   Int? // in minutes
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+}
+
+// Report generation tracking
+model Report {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  reportType  String // "current_marks", "assignment_marks", "total_duration", "overall"
+  collegeId   Int?
+  classId     Int?
+  studentId   Int?
+  generatedAt DateTime @default(now())
+  filePath    String?
+  parameters  String? // JSON string for report parameters
+
+  user    User     @relation(fields: [userId], references: [id])
+  college College? @relation(fields: [collegeId], references: [id])
+  class   Class?   @relation(fields: [classId], references: [id])
+  student User?    @relation("ReportStudent", fields: [studentId], references: [id])
+}
+
+// Topic unlocking rules based on assessment scores
+model TopicUnlockRule {
+  id             Int      @id @default(autoincrement())
+  collegeId      Int?
+  topicId        Int
+  requiredScore  Float    @default(60.0)
+  requiredTopics String? // JSON array of topic IDs that must be completed
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  college College? @relation(fields: [collegeId], references: [id])
+  topic   Topic    @relation(fields: [topicId], references: [id])
+}
+
+// Course catalog - master list of all available courses
+model Course {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  category    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  collegeCourses CollegeCourse[]
+}
+
+// College-specific course assignments
+model CollegeCourse {
+  id        Int      @id @default(autoincrement())
+  collegeId Int
+  courseId  Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  college College @relation(fields: [collegeId], references: [id])
+  course  Course  @relation(fields: [courseId], references: [id])
+
+  @@unique([collegeId, courseId])
 }

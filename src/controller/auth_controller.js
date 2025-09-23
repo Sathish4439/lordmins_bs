@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const prisma = require("../prisma/prisma.js");
+const { prisma } = require("../prisma/prisma.js");
 const { sendSuccess, sendError } = require("../utils/response");
 
 dotenv.config();
@@ -9,16 +9,16 @@ const SECRET = process.env.JWT_SECRET;
 
 // 🔹 Signup Controller
 async function signup(req, res) {
-  const { 
-    username, 
-    password, 
-    role, 
-    name, 
-    email, 
-    collegeId, 
-    classId, 
-    rollNo, 
-    dob 
+  const {
+    username,
+    password,
+    role,
+    name,
+    email,
+    collegeId,
+    classId,
+    rollNo,
+    dob,
   } = req.body;
 
   try {
@@ -26,11 +26,22 @@ async function signup(req, res) {
 
     // Validate required fields based on role
     if (role === "STUDENT" && (!collegeId || !classId || !rollNo)) {
-      return sendError(res, "College, class, and roll number are required for students", 400);
+      return sendError(
+        res,
+        "College, class, and roll number are required for students",
+        400
+      );
     }
 
-    if ((role === "TEACHER" || role === "ADMINISTRATIVE_ACCESS") && !collegeId) {
-      return sendError(res, "College is required for teachers and administrative access", 400);
+    if (
+      (role === "TEACHER" || role === "ADMINISTRATIVE_ACCESS") &&
+      !collegeId
+    ) {
+      return sendError(
+        res,
+        "College is required for teachers and administrative access",
+        400
+      );
     }
 
     // Create user data object
@@ -95,10 +106,9 @@ async function login(req, res) {
   const { username, password } = req.body;
 
   console.log(req.body);
-  
 
   try {
-    const user = await prisma. prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { username },
       include: {
         college: true,
@@ -117,18 +127,18 @@ async function login(req, res) {
     if (!valid) return sendError(res, "Invalid password", 400);
 
     // Update last login
-    await prisma. prisma.user.update({
+    await prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
 
     const token = jwt.sign(
-      { 
-        userId: user.id, 
+      {
+        userId: user.id,
         role: user.role,
         username: user.username,
         collegeId: user.collegeId,
-        classId: user.classId
+        classId: user.classId,
       },
       SECRET,
       { expiresIn: "1d" }
@@ -160,11 +170,11 @@ async function confirmFirstTimeLogin(req, res) {
   const { userId } = req.user;
 
   try {
-    const user = await prisma. prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: userId },
-      data: { 
+      data: {
         isFirstTimeLogin: false,
-        status: "ACTIVE"
+        status: "ACTIVE",
       },
     });
 
@@ -192,12 +202,12 @@ async function refreshToken(req, res) {
     if (!user) return sendError(res, "Invalid refresh token", 401);
 
     const newToken = jwt.sign(
-      { 
-        userId: user.id, 
+      {
+        userId: user.id,
         role: user.role,
         username: user.username,
         collegeId: user.collegeId,
-        classId: user.classId
+        classId: user.classId,
       },
       SECRET,
       { expiresIn: "1d" }
