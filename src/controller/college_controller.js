@@ -78,10 +78,47 @@ async function deleteCollege(req, res) {
   }
 }
 
+// 🔹 Get Classes by College ID
+async function getClassesByCollegeId(req, res) {
+  const { collegeId } = req.params;
+
+  try {
+    const classes = await prisma.class.findMany({
+      where: { collegeId: parseInt(collegeId) },
+      include: {
+        college: true,
+        users: {
+          where: { role: "STUDENT" },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            rollNo: true,
+            status: true,
+            lastLogin: true,
+          },
+        },
+        _count: {
+          select: {
+            users: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return sendSuccess(res, "Classes retrieved successfully", classes);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve classes", 400);
+  }
+}
+
 module.exports = {
   createCollege,
   getColleges,
   getCollege,
+  getClassesByCollegeId,
   updateCollege,
   deleteCollege,
 };

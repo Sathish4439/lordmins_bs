@@ -1,0 +1,852 @@
+{
+  "info": {
+    "name": "LORDMINDS ACADEMY - Super Admin",
+    "description": "Complete API testing collection for Super Admin functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "super_admin_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login Super Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"superadmin\",\n  \"password\": \"superadmin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('super_admin_token', response.data.token);",
+                  "        console.log('Token saved:', response.data.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "College Management",
+      "item": [
+        {
+          "name": "Get All Colleges",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/colleges",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "colleges"]
+            }
+          }
+        },
+        {
+          "name": "Create College",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Engineering College\",\n  \"location\": \"Test City, Test State\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/colleges",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "colleges"]
+            }
+          }
+        },
+        {
+          "name": "Update College",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated College Name\",\n  \"location\": \"Updated Location\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/colleges/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "colleges", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete College",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/colleges/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "colleges", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create Super Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newsuperadmin\",\n  \"password\": \"password123\",\n  \"role\": \"SUPER_ADMIN\",\n  \"name\": \"New Super Admin\",\n  \"email\": \"newsuperadmin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newadmin\",\n  \"password\": \"password123\",\n  \"role\": \"ADMIN\",\n  \"name\": \"New Admin\",\n  \"email\": \"newadmin@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newteacher\",\n  \"password\": \"password123\",\n  \"role\": \"TEACHER\",\n  \"name\": \"New Teacher\",\n  \"email\": \"newteacher@example.com\",\n  \"collegeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newstudent\",\n  \"password\": \"password123\",\n  \"role\": \"STUDENT\",\n  \"name\": \"New Student\",\n  \"email\": \"newstudent@example.com\",\n  \"collegeId\": 1,\n  \"classId\": 1,\n  \"rollNo\": \"STU001\",\n  \"dob\": \"2000-01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User Name\",\n  \"email\": \"updated@example.com\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topic Management",
+      "item": [
+        {
+          "name": "Get All Topics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/topics",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "topics"]
+            }
+          }
+        },
+        {
+          "name": "Create Topic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced Mathematics\",\n  \"description\": \"Advanced mathematical concepts and applications\",\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/topics",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "topics"]
+            }
+          }
+        },
+        {
+          "name": "Update Topic",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Topic Title\",\n  \"description\": \"Updated description\",\n  \"order\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/topics/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "topics", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Topic",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/topics/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "topics", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sub-Topic Management",
+      "item": [
+        {
+          "name": "Get All Sub-Topics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/sub-topics",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "sub-topics"]
+            }
+          }
+        },
+        {
+          "name": "Create Sub-Topic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Calculus Basics\",\n  \"description\": \"Introduction to calculus concepts\",\n  \"topicId\": 1,\n  \"order\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/sub-topics",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "sub-topics"]
+            }
+          }
+        },
+        {
+          "name": "Update Sub-Topic",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Sub-Topic Title\",\n  \"description\": \"Updated description\",\n  \"order\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/sub-topics/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "sub-topics", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Sub-Topic",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/sub-topics/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "sub-topics", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assessment Management",
+      "item": [
+        {
+          "name": "Get All Assessments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "assessments"]
+            }
+          }
+        },
+        {
+          "name": "Create Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Mathematics Assessment\",\n  \"description\": \"Comprehensive mathematics test\",\n  \"type\": \"QUESTIONS\",\n  \"subTopicId\": 1,\n  \"collegeId\": 1,\n  \"classId\": 1,\n  \"passingScore\": 70.0,\n  \"timeLimit\": 30\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "assessments"]
+            }
+          }
+        },
+        {
+          "name": "Update Assessment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Assessment Title\",\n  \"description\": \"Updated description\",\n  \"passingScore\": 80.0,\n  \"timeLimit\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/assessments/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "assessments", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Assessment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/assessments/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "assessments", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Class Management",
+      "item": [
+        {
+          "name": "Get All Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/classes",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "classes"]
+            }
+          }
+        },
+        {
+          "name": "Create Class",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fourth Year\",\n  \"collegeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/classes",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "classes"]
+            }
+          }
+        },
+        {
+          "name": "Update Class",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Class Name\",\n  \"collegeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/classes/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "classes", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Class",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/classes/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "classes", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Course Assignment",
+      "item": [
+        {
+          "name": "Assign Topics to College",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"collegeId\": 1,\n  \"topicIds\": [1, 2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/topics/assign-to-college",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "topics", "assign-to-college"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/reports",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "reports"]
+            }
+          }
+        },
+        {
+          "name": "Download Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/reports/download/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "reports", "download", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Department Management",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/departments",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Create Department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Computer Science\",\n  \"collegeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/departments",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Update Department",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Department Name\",\n  \"collegeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/super-admin/departments/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "departments", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Department",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/super-admin/departments/1",
+              "host": ["{{base_url}}"],
+              "path": ["super-admin", "departments", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

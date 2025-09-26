@@ -4,6 +4,7 @@ const { authMiddleware } = require("../middle_ware/auth_middleware");
 const { checkRole } = require("../middle_ware/role_middleware");
 const {
   getAllColleges,
+  getClassesByCollegeId,
   createCollege,
   updateCollege,
   deleteCollege,
@@ -35,6 +36,11 @@ const {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  getAllStudents,
+  getStudentsByClass,
+  getStudentsByCollege,
+  getStudentsByDepartment,
+  getStudentStatistics,
 } = require("../controller/super_admin_controller");
 
 // Apply authentication and role middleware to all routes
@@ -43,6 +49,7 @@ router.use(checkRole("SUPER_ADMIN"));
 
 // College routes
 router.get("/colleges", getAllColleges);
+router.get("/colleges/:collegeId/classes", getClassesByCollegeId);
 router.post("/colleges", createCollege);
 router.put("/colleges/:id", updateCollege);
 router.delete("/colleges/:id", deleteCollege);
@@ -83,6 +90,13 @@ router.get("/departments", getAllDepartments);
 router.post("/departments", createDepartment);
 router.put("/departments/:id", updateDepartment);
 router.delete("/departments/:id", deleteDepartment);
+
+// Student routes
+router.get("/students", getAllStudents);
+router.get("/students/class/:classId", getStudentsByClass);
+router.get("/students/college/:collegeId", getStudentsByCollege);
+router.get("/students/department/:departmentId", getStudentsByDepartment);
+router.get("/students/statistics", getStudentStatistics);
 
 // Report routes
 router.get("/reports", getAllReports);

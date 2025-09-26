@@ -1,0 +1,686 @@
+{
+  "info": {
+    "name": "LORDMINDS ACADEMY - Admin",
+    "description": "Complete API testing collection for Admin functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin1\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('admin_token', response.data.token);",
+                  "        console.log('Token saved:', response.data.token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "dashboard"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "View Operations",
+      "item": [
+        {
+          "name": "Get All Colleges",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/colleges",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "colleges"]
+            }
+          }
+        },
+        {
+          "name": "Get College Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/colleges/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "colleges", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get All Classes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/classes",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "classes"]
+            }
+          }
+        },
+        {
+          "name": "Get Classes by College",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/classes?collegeId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "classes"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/departments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Get All Topics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/topics",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "topics"]
+            }
+          }
+        },
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/students",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "students"]
+            }
+          }
+        },
+        {
+          "name": "Get Students by College",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/students?collegeId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "students"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Students by College and Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/students?collegeId=1&classId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "students"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                },
+                {
+                  "key": "classId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Assessments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments"]
+            }
+          }
+        },
+        {
+          "name": "Get Assessments by College",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/assessments?collegeId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assessment Management",
+      "item": [
+        {
+          "name": "Create Global Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Global Mathematics Assessment\",\n  \"description\": \"Comprehensive mathematics test for all colleges\",\n  \"type\": \"QUESTIONS\",\n  \"passingScore\": 70.0,\n  \"timeLimit\": 30,\n  \"questions\": [\n    {\n      \"topic\": \"Mathematics\",\n      \"subTopic\": \"Algebra\",\n      \"questionText\": \"What is 2 + 2?\",\n      \"options\": [\"3\", \"4\", \"5\", \"6\"],\n      \"correctAnswerIndex\": 1,\n      \"explanation\": \"2 + 2 equals 4\",\n      \"timeLimitSec\": 30\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments"]
+            }
+          }
+        },
+        {
+          "name": "Create Per-College Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"College-Specific Assessment\",\n  \"description\": \"Assessment for specific college\",\n  \"type\": \"QUESTIONS\",\n  \"collegeId\": 1,\n  \"passingScore\": 75.0,\n  \"timeLimit\": 45,\n  \"questions\": [\n    {\n      \"topic\": \"Physics\",\n      \"subTopic\": \"Mechanics\",\n      \"questionText\": \"What is Newton's first law?\",\n      \"options\": [\"F=ma\", \"An object at rest stays at rest\", \"Every action has an equal reaction\", \"Energy cannot be created\"],\n      \"correctAnswerIndex\": 1,\n      \"explanation\": \"Newton's first law states that an object at rest stays at rest\",\n      \"timeLimitSec\": 45\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments"]
+            }
+          }
+        },
+        {
+          "name": "Create Per-Class Assessment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Class-Specific Assessment\",\n  \"description\": \"Assessment for specific class\",\n  \"type\": \"QUESTIONS\",\n  \"collegeId\": 1,\n  \"classId\": 1,\n  \"passingScore\": 80.0,\n  \"timeLimit\": 60,\n  \"questions\": [\n    {\n      \"topic\": \"Chemistry\",\n      \"subTopic\": \"Organic Chemistry\",\n      \"questionText\": \"What is the molecular formula of methane?\",\n      \"options\": [\"CH4\", \"C2H6\", \"C3H8\", \"C4H10\"],\n      \"correctAnswerIndex\": 0,\n      \"explanation\": \"Methane has the molecular formula CH4\",\n      \"timeLimitSec\": 60\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/assessments",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments"]
+            }
+          }
+        },
+        {
+          "name": "Get Assessment Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/assessments/results",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments", "results"]
+            }
+          }
+        },
+        {
+          "name": "Get Assessment Results by College",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/assessments/results?collegeId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "assessments", "results"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Course Assignment",
+      "item": [
+        {
+          "name": "Assign Topics to College",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"collegeId\": 1,\n  \"topicIds\": [1, 2, 3]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/topics/assign-to-college",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "topics", "assign-to-college"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Student Progress",
+      "item": [
+        {
+          "name": "Get Student Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/progress",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "progress"]
+            }
+          }
+        },
+        {
+          "name": "Get Student Progress by College",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/progress?collegeId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "progress"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Student Progress by College and Class",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/progress?collegeId=1&classId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "progress"],
+              "query": [
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                },
+                {
+                  "key": "classId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Generate Marks Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports?type=marks",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "marks"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Marks Report by College",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports?type=marks&collegeId=1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "marks"
+                },
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Assignment Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports?type=assignment",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "assignment"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Duration Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports?type=duration",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "duration"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Overall Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports?type=overall",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "overall"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Report with Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/reports?type=marks&collegeId=1&startDate=2025-01-01&endDate=2025-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "reports"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "marks"
+                },
+                {
+                  "key": "collegeId",
+                  "value": "1"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-12-31"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

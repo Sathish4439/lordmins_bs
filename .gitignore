@@ -1,5 +1,11 @@
 node_modules
 # Keep environment variables out of version control
 .env
-
+api_testing_guide.md
+package-lock.json
+package.json
+test_endpoints.js
+test_server.js
+readme.md
+api_testing_guide_v2.md
 /src/generated/prisma

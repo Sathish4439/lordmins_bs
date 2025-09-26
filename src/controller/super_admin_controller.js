@@ -34,6 +34,48 @@ async function getAllColleges(req, res) {
   }
 }
 
+// 🔹 Get Classes by College ID
+async function getClassesByCollegeId(req, res) {
+  const { collegeId } = req.params;
+
+  try {
+    const classes = await prisma.class.findMany({
+      where: { collegeId: parseInt(collegeId) },
+      include: {
+        college: true,
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        users: {
+          where: { role: "STUDENT" },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            rollNo: true,
+            status: true,
+            lastLogin: true,
+          },
+        },
+        _count: {
+          select: {
+            users: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return sendSuccess(res, "Classes retrieved successfully", classes);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "Failed to retrieve classes", 400);
+  }
+}
+
 // 🔹 Create College
 async function createCollege(req, res) {
   const { name, location } = req.body;
@@ -644,6 +686,7 @@ async function deleteAssessment(req, res) {
 // 🔹 Get All Classes
 async function getAllClasses(req, res) {
   try {
+    console.log("🔍 getAllClasses called");
     const classes = await prisma.class.findMany({
       include: {
         college: {
@@ -653,17 +696,23 @@ async function getAllClasses(req, res) {
             location: true,
           },
         },
-        students: {
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        users: {
           select: {
             id: true,
             name: true,
             username: true,
             rollNo: true,
+            role: true,
           },
         },
         _count: {
           select: {
-            students: true,
             users: true,
           },
         },
@@ -671,28 +720,30 @@ async function getAllClasses(req, res) {
       orderBy: { createdAt: "desc" },
     });
 
+    console.log(`✅ Found ${classes.length} classes`);
     return sendSuccess(res, "Classes retrieved successfully", classes);
   } catch (err) {
-    console.error(err);
-    return sendError(res, "Failed to retrieve classes", 500);
+    console.error("❌ Error in getAllClasses:", err);
+    return sendError(res, "Failed to retrieve classes 2", 500);
   }
 }
 
 // 🔹 Create Class
 async function createClass(req, res) {
-  const { name, collegeId } = req.body;
+  const { name, collegeId, departmentId } = req.body;
 
   try {
     const classModel = await prisma.class.create({
       data: {
         name,
         collegeId: parseInt(collegeId),
+        departmentId: departmentId ? parseInt(departmentId) : null,
       },
       include: {
         college: true,
+        department: true,
         _count: {
           select: {
-            students: true,
             users: true,
           },
         },
@@ -709,7 +760,7 @@ async function createClass(req, res) {
 // 🔹 Update Class
 async function updateClass(req, res) {
   const { id } = req.params;
-  const { name, collegeId } = req.body;
+  const { name, collegeId, departmentId } = req.body;
 
   try {
     const classModel = await prisma.class.update({
@@ -717,12 +768,13 @@ async function updateClass(req, res) {
       data: {
         name,
         collegeId: collegeId ? parseInt(collegeId) : undefined,
+        departmentId: departmentId ? parseInt(departmentId) : null,
       },
       include: {
         college: true,
+        department: true,
         _count: {
           select: {
-            students: true,
             users: true,
           },
         },
@@ -1102,8 +1154,322 @@ const deleteDepartment = async (req, res) => {
   }
 };
 
+// 🔹 Get All Students
+async function getAllStudents(req, res) {
+  try {
+    const {
+      collegeId,
+      departmentId,
+      classId,
+      page = 1,
+      limit = 10,
+      search,
+    } = req.query;
+
+    const where = {
+      role: "STUDENT",
+      ...(collegeId && { collegeId: parseInt(collegeId) }),
+      ...(departmentId && { departmentId: parseInt(departmentId) }),
+      ...(classId && { classId: parseInt(classId) }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { username: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [students, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          college: true,
+          department: true,
+          class: true,
+          student: true,
+        },
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      message: "Students retrieved successfully",
+      data: students,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error getting students:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve students",
+      error: error.message,
+    });
+  }
+}
+
+// 🔹 Get Students by Class
+async function getStudentsByClass(req, res) {
+  try {
+    const { classId } = req.params;
+    const { page = 1, limit = 10, search } = req.query;
+
+    const where = {
+      role: "STUDENT",
+      classId: parseInt(classId),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { username: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [students, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          college: true,
+          department: true,
+          class: true,
+          student: true,
+        },
+        skip,
+        take: parseInt(limit),
+        orderBy: { name: "asc" },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      message: "Students retrieved successfully",
+      data: students,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error getting students by class:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve students",
+      error: error.message,
+    });
+  }
+}
+
+// 🔹 Get Students by College
+async function getStudentsByCollege(req, res) {
+  try {
+    const { collegeId } = req.params;
+    const { page = 1, limit = 10, search } = req.query;
+
+    const where = {
+      role: "STUDENT",
+      collegeId: parseInt(collegeId),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { username: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [students, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          college: true,
+          department: true,
+          class: true,
+          student: true,
+        },
+        skip,
+        take: parseInt(limit),
+        orderBy: { name: "asc" },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      message: "Students retrieved successfully",
+      data: students,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error getting students by college:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve students",
+      error: error.message,
+    });
+  }
+}
+
+// 🔹 Get Students by Department
+async function getStudentsByDepartment(req, res) {
+  try {
+    const { departmentId } = req.params;
+    const { page = 1, limit = 10, search } = req.query;
+
+    const where = {
+      role: "STUDENT",
+      departmentId: parseInt(departmentId),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { username: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }),
+    };
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [students, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        include: {
+          college: true,
+          department: true,
+          class: true,
+          student: true,
+        },
+        skip,
+        take: parseInt(limit),
+        orderBy: { name: "asc" },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      message: "Students retrieved successfully",
+      data: students,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error getting students by department:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve students",
+      error: error.message,
+    });
+  }
+}
+
+// 🔹 Get Student Statistics
+async function getStudentStatistics(req, res) {
+  try {
+    const { collegeId, departmentId, classId } = req.query;
+
+    const where = {
+      role: "STUDENT",
+      ...(collegeId && { collegeId: parseInt(collegeId) }),
+      ...(departmentId && { departmentId: parseInt(departmentId) }),
+      ...(classId && { classId: parseInt(classId) }),
+    };
+
+    const [
+      totalStudents,
+      activeStudents,
+      inactiveStudents,
+      studentsByCollege,
+      studentsByDepartment,
+      studentsByClass,
+    ] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.count({ where: { ...where, status: "ACTIVE" } }),
+      prisma.user.count({ where: { ...where, status: "INACTIVE" } }),
+      prisma.user.groupBy({
+        by: ["collegeId"],
+        where,
+        _count: { id: true },
+        include: {
+          college: {
+            select: { name: true },
+          },
+        },
+      }),
+      prisma.user.groupBy({
+        by: ["departmentId"],
+        where,
+        _count: { id: true },
+        include: {
+          department: {
+            select: { name: true },
+          },
+        },
+      }),
+      prisma.user.groupBy({
+        by: ["classId"],
+        where,
+        _count: { id: true },
+        include: {
+          class: {
+            select: { name: true },
+          },
+        },
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      message: "Student statistics retrieved successfully",
+      data: {
+        totalStudents,
+        activeStudents,
+        inactiveStudents,
+        studentsByCollege,
+        studentsByDepartment,
+        studentsByClass,
+      },
+    });
+  } catch (error) {
+    console.error("Error getting student statistics:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve student statistics",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   getAllColleges,
+  getClassesByCollegeId,
   createCollege,
   updateCollege,
   deleteCollege,
@@ -1135,4 +1501,9 @@ module.exports = {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  getAllStudents,
+  getStudentsByClass,
+  getStudentsByCollege,
+  getStudentsByDepartment,
+  getStudentStatistics,
 };

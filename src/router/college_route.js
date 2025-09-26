@@ -13,6 +13,11 @@ router.post(
 
 router.get("/", authMiddleware, collegeController.getColleges);
 router.get("/:id", authMiddleware, collegeController.getCollege);
+router.get(
+  "/:collegeId/classes",
+  authMiddleware,
+  collegeController.getClassesByCollegeId
+);
 
 router.put(
   "/:id",
